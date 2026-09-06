@@ -12,7 +12,13 @@ class Settings(BaseSettings):
         env_prefix='FINANBOT_',
     )
 
+    # model
     model_provider: str
     model_name: str
+
+    # neo4j
+    neo4j_uri: str
+    neo4j_username: str
+    neo4j_password: str
 
 settings = Settings()
