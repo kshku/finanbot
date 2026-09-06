@@ -1,15 +1,19 @@
-from .models import model
+import asyncio
+
+from .agent import get_agent
 
 from .db.connection import Neo4jDB
 from .db.migrate import migrate
 from .db.seed import seed_if_needed
+
 
 db = Neo4jDB()
 
 def setup_db() -> bool:
     try:
         db.wait_until_available()
-    except RuntimeError:
+    except RuntimeError as e:
+        print(str(e))
         return False
 
     migrate(db)
@@ -20,17 +24,35 @@ def setup_db() -> bool:
 def cleanup_db():
     db.close()
 
+async def run_agent():
+    print("Getting the agent")
+    agent = await get_agent()
+
+    print("Starting chat loop")
+    while True:
+        message = input(">>> ")
+
+        if message == "exit":
+            break
+
+        result = await agent.ainvoke({
+            "messages": [
+                {"role": "user", "content": message}
+            ]
+        })
+
+        print(result["messages"][-1].content)
+        print()
+
 def main():
-    setup_db()
+    print("Setting up DB")
+    if not setup_db():
+        return
 
     try:
-        # agent setup
-        result = model.invoke(
-            "Hello! Who are you? Briefly introudce yourself"
-        )
-        print(result.content)
+        asyncio.run(run_agent())
     except Exception as e:
-        print("Got some exception!", e)
+        print("Got some exception!", str(e))
     finally:
         cleanup_db()
 

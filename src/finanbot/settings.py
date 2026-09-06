@@ -20,5 +20,8 @@ class Settings(BaseSettings):
     neo4j_uri: str
     neo4j_username: str
     neo4j_password: str
+    neo4j_database: str = "neo4j"
+    neo4j_read_only: bool = True
+    neo4j_telemetry: bool = False
 
 settings = Settings()

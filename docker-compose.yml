@@ -9,6 +9,7 @@ services:
 
     environment:
       NEO4J_AUTH: ${FINANBOT_NEO4J_USERNAME}/${FINANBOT_NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc"]'
 
     volumes:
       - neo4j_data:/data
@@ -33,6 +34,9 @@ services:
       - "host.docker.internal:host-gateway"
 
     container_name: finanbot
+
+    stdin_open: true
+    tty: true
 
     depends_on:
       neo4j:
