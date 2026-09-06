@@ -24,24 +24,55 @@ def setup_db() -> bool:
 def cleanup_db():
     db.close()
 
-async def run_agent():
-    print("Getting the agent")
+async def chat():
     agent = await get_agent()
-
-    print("Starting chat loop")
     while True:
         message = input(">>> ")
 
         if message == "exit":
             break
 
-        result = await agent.ainvoke({
-            "messages": [
-                {"role": "user", "content": message}
-            ]
-        })
+        print()
 
-        print(result["messages"][-1].content)
+        async for event in agent.astream_events(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": message,
+                    }
+                ]
+            },
+            version="v2",
+        ):
+            event_type = event["event"]
+
+            match event_type:
+                case "on_chat_model_start":
+                    print("🤖 LLM")
+
+                case "on_chat_model_stream":
+                    chunk = event["data"]["chunk"]
+
+                    if chunk.content:
+                        print(chunk.content, end="", flush=True)
+
+                case "on_chat_model_end":
+                    print("\n")
+
+                case "on_tool_start":
+                    print(f"\n🛠 Tool: {event['name']}")
+                    print(event["data"]["input"])
+
+                case "on_tool_end":
+                    print(f"✅ Tool Finished: {event['name']}")
+                    print(event["data"]["output"])
+                    print()
+
+                case "on_chain_error":
+                    print("❌ Error")
+                    print(event["data"])
+
         print()
 
 def main():
@@ -50,7 +81,7 @@ def main():
         return
 
     try:
-        asyncio.run(run_agent())
+        asyncio.run(chat())
     except Exception as e:
         print("Got some exception!", str(e))
     finally:

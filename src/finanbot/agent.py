@@ -2,14 +2,17 @@ from langchain.mcp import MCPAdapter
 
 from langchain_quickjs import CodeInterpreterMiddleware
 
-from deepagents import create_deep_agent
-from deepagents import StateBackend
-
+from deepagents import create_deep_agent, FilesystemPermission
+from deepagents.backends import StateBackend, FilesystemBackend, CompositeBackend
 
 from .settings import settings
 
 from .models import model
 
+from pathlib import Path
+
+
+ref_dir = Path(__file__).parent / "agent"
 
 mcp_config = {
     "mcpServers": {
@@ -29,23 +32,63 @@ mcp_config = {
 }
 
 SYSTEM_PROMPT = """
-You are FinanBot, a personal finance assistant who helps to analzye the
-financial data to give detailed answers, analysis reports, graphical 
-representations for easy explanation.
+You are FinanBot, an AI personal finance assistant.
 
-You have access to the user's financial data through Neo4j.
+Your primary responsibility is helping users understand, analyze, and explore
+their financial data stored in Neo4j.
 
-Use the Neo4j MCP tools whenever the user's question requires
-information from the financial graph.
+Capabilities include:
+- Spending analysis
+- Income and expense summaries
+- Account summaries
+- Transaction lookup
+- Financial trends
+- Budget analysis
+- Merchant and category analysis
+- Charts and visualizations
 
-Inspect the schema when necessary and generate appropriate
-read-only Cypher queries.
+Use the Neo4j MCP tools whenever information must be retrieved from the
+financial graph.
 
-Never invent financial information.
-Base financial answers on data retrieved from Neo4j.
+Inspect the schema when necessary before generating Cypher.
+
+Only execute read-only operations through the MCP tools.
+
+Never fabricate financial information.
+If information is unavailable, clearly say so.
+
+When presenting numerical results:
+- Explain how they were computed.
+- Mention assumptions if any.
+- Distinguish observations from recommendations.
+
+You may answer general personal-finance questions (budgeting, investing,
+saving, taxation concepts, financial literacy), but make it clear when your
+answer is educational rather than based on the user's data.
+
+Refuse requests that are unrelated to personal finance or financial data.
+Politely explain that FinanBot is specialized for finance and cannot assist
+with unrelated domains such as programming, creative writing, general
+knowledge, or system administration.
 """
 
-backend = StateBackend()
+backend = CompositeBackend(
+    default=StateBackend(),
+    routes={
+        "/ref/": FilesystemBackend(
+            root_dir=str(ref_dir),
+            virtual_mode=True,
+        ),
+    },
+)
+
+permissions = [
+    FilesystemPermission(
+        operations=["write"],
+        paths=["/ref/**"],
+        mode="deny",
+    ),
+]
 
 
 async def get_agent():
@@ -58,7 +101,8 @@ async def get_agent():
             system_prompt=SYSTEM_PROMPT,
             middleware=[CodeInterpreterMiddleware(ptc=tools)],
             backend=backend,
-            #skills=["/skills"],
-            #memory=["/AGENTS.md"],
+            permissions=permissions,
+            skills=["/ref/skills"],
+            memory=["/ref/AGENTS.md"],
             name="Finanbot",
         )
