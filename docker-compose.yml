@@ -1,0 +1,42 @@
+services:
+  neo4j:
+    image: neo4j:5.26
+    container_name: finanbot-neo4j
+
+    ports:
+      - "7474:7474" # Neo4j Browser
+      - "7678:7678" # Bolt protocol
+
+    environment:
+      NEO4J_AUTH: ${FINANBOT_NEO4J_USERNAME}/${FINANBOT_NEO4J_PASSWORD}
+
+    volumes:
+      - neo4j_data:/data
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7474"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
+  finanbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: finanbot
+
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+    restart: unless-stopped
+
+volumes:
+  neo4j_data
