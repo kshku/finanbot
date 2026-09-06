@@ -1,6 +1,6 @@
 from langchain.chat_models import init_chat_model
 
-from settings import settings
+from .settings import settings
 
 model = init_chat_model(
     model=settings.model_name,
