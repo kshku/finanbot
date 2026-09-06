@@ -1,20 +1,13 @@
 from datetime import date, timedelta
-from pathlib import Path
-import csv
 import random
 import uuid
 
-from faker import Faker
 
-root = Path(__file__).resolve().parent.parent
-
-fake = Faker("en_IN")
 random.seed(42)
 
-OUTPUT_DIR = root / Path("data/generated")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 CATEGORIES = [
+    "Income",
     "Food",
     "Groceries",
     "Transport",
@@ -27,7 +20,12 @@ CATEGORIES = [
     "Education",
 ]
 
+
+# Merchant -> Category
 MERCHANTS = {
+    "Employer": "Income",
+    "Landlord": "Rent",
+
     "Swiggy": "Food",
     "Zomato": "Food",
     "Local Restaurant": "Food",
@@ -56,16 +54,29 @@ MERCHANTS = {
 }
 
 
-def generate_accounts():
+def generate_people() -> list[dict]:
+    return [
+        {
+            "person_id": "USER001",
+            "name": "Alex",
+        }
+    ]
+
+
+def generate_accounts(people: list[dict]) -> list[dict]:
+    person_ids = [person["person_id"] for person in people]
+
     return [
         {
             "account_id": "ACC001",
+            "person_id": random.choice(person_ids),
             "name": "Savings Account",
             "type": "savings",
             "bank": "HDFC Bank",
         },
         {
             "account_id": "ACC002",
+            "person_id": random.choice(person_ids),
             "name": "Credit Card",
             "type": "credit_card",
             "bank": "HDFC Bank",
@@ -73,25 +84,29 @@ def generate_accounts():
     ]
 
 
-def generate_transactions(accounts):
+def generate_transactions(accounts: list[dict]) -> list[dict]:
     transactions = []
 
     start_date = date(2020, 1, 1)
     end_date = date(2025, 12, 31)
 
     current = start_date
-    balance = 50000
+    balance = 50_000
+
+    account_ids = [account["account_id"] for account in accounts]
+    savings_account = next(account for account in accounts if account["type"] == "savings")
 
     while current <= end_date:
+
         # Monthly salary
         if current.day == 1:
-            amount = 70000
+            amount = 70_000
             balance += amount
 
             transactions.append({
                 "transaction_id": str(uuid.uuid4()),
-                "account_id": "ACC001",
-                "date": current,
+                "account_id": savings_account["account_id"],
+                "date": current.isoformat(),
                 "description": "Monthly Salary",
                 "merchant": "Employer",
                 "category": "Income",
@@ -102,13 +117,13 @@ def generate_transactions(accounts):
 
         # Monthly rent
         if current.day == 5:
-            amount = 15000
+            amount = 15_000
             balance -= amount
 
             transactions.append({
                 "transaction_id": str(uuid.uuid4()),
-                "account_id": "ACC001",
-                "date": current,
+                "account_id": savings_account["account_id"],
+                "date": current.isoformat(),
                 "description": "Monthly Rent",
                 "merchant": "Landlord",
                 "category": "Rent",
@@ -119,30 +134,52 @@ def generate_transactions(accounts):
 
         # Random daily expenses
         if random.random() < 0.65:
-            merchant = random.choice(list(MERCHANTS))
+            merchant = random.choice(
+                [
+                    merchant
+                    for merchant, category in MERCHANTS.items()
+                    if category not in {"Income", "Rent"}
+                ]
+            )
+
             category = MERCHANTS[merchant]
 
             if category == "Food":
                 amount = random.randint(150, 800)
+
             elif category == "Groceries":
-                amount = random.randint(500, 3000)
+                amount = random.randint(500, 3_000)
+
             elif category == "Transport":
                 amount = random.randint(100, 700)
+
             elif category == "Shopping":
-                amount = random.randint(500, 5000)
+                amount = random.randint(500, 5_000)
+
             elif category == "Entertainment":
-                amount = random.randint(100, 1000)
+                amount = random.randint(100, 1_000)
+
             elif category == "Bills":
-                amount = random.randint(500, 3000)
+                amount = random.randint(500, 3_000)
+
+            elif category == "Healthcare":
+                amount = random.randint(200, 2_000)
+
+            elif category == "Travel":
+                amount = random.randint(1_000, 10_000)
+
+            elif category == "Education":
+                amount = random.randint(500, 5_000)
+
             else:
-                amount = random.randint(200, 2000)
+                amount = random.randint(200, 2_000)
 
             balance -= amount
 
             transactions.append({
                 "transaction_id": str(uuid.uuid4()),
-                "account_id": random.choice(["ACC001", "ACC002"]),
-                "date": current,
+                "account_id": random.choice(account_ids),
+                "date": current.isoformat(),
                 "description": f"Payment at {merchant}",
                 "merchant": merchant,
                 "category": category,
@@ -154,29 +191,3 @@ def generate_transactions(accounts):
         current += timedelta(days=1)
 
     return transactions
-
-
-def write_csv(filename, rows):
-    if not rows:
-        return
-
-    path = OUTPUT_DIR / filename
-
-    with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=rows[0].keys())
-        writer.writeheader()
-        writer.writerows(rows)
-
-
-def main():
-    accounts = generate_accounts()
-    transactions = generate_transactions(accounts)
-
-    write_csv("accounts.csv", accounts)
-    write_csv("transactions.csv", transactions)
-
-    print(f"Generated {len(transactions)} transactions.")
-
-
-if __name__ == "__main__":
-    main()

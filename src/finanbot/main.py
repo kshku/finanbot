@@ -2,6 +2,7 @@ from .models import model
 
 from .db.connection import Neo4jDB
 from .db.migrate import migrate
+from .db.seed import seed_if_needed
 
 db = Neo4jDB()
 
@@ -12,6 +13,7 @@ def setup_db() -> bool:
         return False
 
     migrate()
+    seed_if_needed()
 
     return True
 
