@@ -5,7 +5,7 @@ services:
 
     ports:
       - "7474:7474" # Neo4j Browser
-      - "7678:7678" # Bolt protocol
+      - "7687:7687" # Bolt protocol
 
     environment:
       NEO4J_AUTH: ${FINANBOT_NEO4J_USERNAME}/${FINANBOT_NEO4J_PASSWORD}
@@ -26,6 +26,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        MODEL_PROVIDER: ${FINANBOT_MODEL_PROVIDER}
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     container_name: finanbot
 
@@ -35,8 +40,6 @@ services:
 
     env_file:
       - .env
-
-    restart: unless-stopped
 
 volumes:
   neo4j_data:

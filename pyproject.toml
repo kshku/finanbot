@@ -21,6 +21,15 @@ finanbot = "finanbot:main"
 ollama = [
     "langchain-ollama>=1.1.0",
 ]
+openai = [
+    "langchain-openai>=1.6.0",
+]
+gemini = [
+    "langchain-google-genai>=4.4.0",
+]
+anthropic = [
+    "langchain-anthropic>=1.7.1",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
