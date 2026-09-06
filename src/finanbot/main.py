@@ -12,8 +12,8 @@ def setup_db() -> bool:
     except RuntimeError:
         return False
 
-    migrate()
-    seed_if_needed()
+    migrate(db)
+    seed_if_needed(db)
 
     return True
 
@@ -29,8 +29,8 @@ def main():
             "Hello! Who are you? Briefly introudce yourself"
         )
         print(result.content)
-    except Exception:
-        pass
+    except Exception as e:
+        print("Got some exception!", e)
     finally:
         cleanup_db()
 

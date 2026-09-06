@@ -34,13 +34,14 @@ def _seed_categories(db: Neo4jDB, categories: list[str]):
 def _seed_merchants(db: Neo4jDB, merchants: dict):
     merchants = [
         {"name": name, "category": category}
-        for name, category in MERCHANTS.items()
+        for name, category in merchants.items()
     ]
 
     query = """
     UNWIND $merchants as merchant
 
     MERGE (m:Merchant {name: merchant.name})
+    WITH m, merchant
     MATCH (c:Category {name: merchant.category})
     MERGE (m)-[:IN_CATEGORY]->(c)
     """
@@ -57,6 +58,7 @@ def _seed_accounts(db: Neo4jDB, accounts: list[dict]):
         a.type = account.type,
         a.bank = account.bank
 
+    WITH a, account
     MATCH (p:Person {id: account.person_id})
     MERGE (p)-[:HAS_ACCOUNT]->(a)
     """

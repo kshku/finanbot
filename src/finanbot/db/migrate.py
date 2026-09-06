@@ -12,4 +12,8 @@ def migrate(db: Neo4jDB):
     with db.session() as session:
         for migration in migrations:
             query = migration.read_text()
-            session.run(query)
+
+            statements = [statement.strip() for statement in query.split(";") if statement.strip()]
+
+            for statement in statements:
+                session.run(statement)
