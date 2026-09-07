@@ -17,8 +17,8 @@ ref_dir = Path(__file__).parent / "agent"
 mcp_config = {
     "mcpServers": {
         "neo4j": {
-            "command": "python",
-            "args": ["-m", "neo4j_mcp_server"],
+            "command": "uv",
+            "args": ["run", "python","-m", "neo4j_mcp_server"],
             "env": {
                 "NEO4J_URI": settings.neo4j_uri,
                 "NEO4J_USERNAME": settings.neo4j_username,
