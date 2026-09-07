@@ -101,7 +101,7 @@ def seed(db: Neo4jDB):
 
 def seed_if_needed(db: Neo4jDB):
     query = """
-    MATCH (n) RETURN count(n) as count
+    MATCH (t:Transaction) RETURN count(t) as count
     """
     with db.session() as session:
         result = session.run(query)

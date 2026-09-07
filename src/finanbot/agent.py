@@ -94,8 +94,7 @@ permissions = [
 async def get_agent():
     async with MCPAdapter(mcp_config) as adapter:
         tools = await adapter.list_tools()
-
-        return create_deep_agent(
+        agent = create_deep_agent(
             model=model,
             tools=tools,
             system_prompt=SYSTEM_PROMPT,
@@ -106,3 +105,5 @@ async def get_agent():
             memory=["/ref/AGENTS.md"],
             name="Finanbot",
         )
+
+        return agent

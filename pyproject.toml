@@ -33,6 +33,9 @@ gemini = [
 anthropic = [
     "langchain-anthropic>=1.7.1",
 ]
+openrouter = [
+    "langchain-openrouter>=0.2.8",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]

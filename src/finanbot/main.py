@@ -8,6 +8,11 @@ from .db.seed import seed_if_needed
 
 
 db = Neo4jDB()
+config = {
+    "configurable": {
+        "thread_id": "finanbot-cli"
+    }
+}
 
 def setup_db() -> bool:
     try:
@@ -26,6 +31,7 @@ def cleanup_db():
 
 async def chat():
     agent = await get_agent()
+
     while True:
         message = input(">>> ")
 
@@ -44,6 +50,7 @@ async def chat():
                 ]
             },
             version="v2",
+            config=config,
         ):
             event_type = event["event"]
 
@@ -54,18 +61,31 @@ async def chat():
                 case "on_chat_model_stream":
                     chunk = event["data"]["chunk"]
 
+                    # Normal assistant response
                     if chunk.content:
                         print(chunk.content, end="", flush=True)
+
+                    # Reasoning / thinking exposed by the provider
+                    reasoning = getattr(chunk, "reasoning_content", None)
+
+                    if reasoning:
+                        print(
+                            f"\n💭 {reasoning}",
+                            end="",
+                            flush=True,
+                        )
 
                 case "on_chat_model_end":
                     print("\n")
 
                 case "on_tool_start":
                     print(f"\n🛠 Tool: {event['name']}")
+                    print("Input:")
                     print(event["data"]["input"])
 
                 case "on_tool_end":
                     print(f"✅ Tool Finished: {event['name']}")
+                    print("Output:")
                     print(event["data"]["output"])
                     print()
 
