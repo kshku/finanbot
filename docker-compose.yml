@@ -1,5 +1,5 @@
 services:
-  neo4j:
+  finanbot_neo4j:
     image: neo4j:5.26
     container_name: finanbot-neo4j
 
@@ -37,7 +37,7 @@ services:
     tty: true
 
     depends_on:
-      neo4j:
+      finanbot_neo4j:
         condition: service_healthy
 
     env_file:

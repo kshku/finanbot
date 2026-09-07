@@ -16,6 +16,4 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --extra ${MODEL_PROVIDER}
 
-ENV PATH="/app/.venv/bin:$PATH"
-
-CMD ["python", "-m", "finanbot.main"]
+CMD ["uv", "run", "python", "-m", "finanbot"]
